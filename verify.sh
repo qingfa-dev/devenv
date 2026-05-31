@@ -34,6 +34,11 @@ assert "profiles/dotnet.nix exists"   "test -f profiles/dotnet.nix"
 assert "profiles/python.nix exists"   "test -f profiles/python.nix"
 assert "profiles/frontend.nix exists" "test -f profiles/frontend.nix"
 assert "flake.nix exists"             "test -f flake.nix"
+assert "shell.nix exists"             "test -f shell.nix"
+assert "devenv.nix exists"            "test -f devenv.nix"
+assert "devenv-dotnet.nix exists"     "test -f devenv-dotnet.nix"
+assert "devenv-python.nix exists"     "test -f devenv-python.nix"
+assert "devenv-frontend.nix exists"   "test -f devenv-frontend.nix"
 assert "Makefile exists"              "test -f Makefile"
 assert "extensions.json exists"       "test -f .vscode/extensions.json"
 assert "README exists"                "test -f README.md"
@@ -111,9 +116,24 @@ assert "extensions: >= 20" "test $EXT_COUNT -ge 20"
 
 banner "7. MAKEFILE TARGETS"
 
-for t in verify integration-test shell-default shell-dotnet shell-python shell-frontend shell-full clean; do
+for t in verify integration-test shell-default shell-dotnet shell-python shell-frontend shell-full clean \
+         nix-shell-default nix-shell-dotnet nix-shell-python nix-shell-frontend nix-shell-full \
+         devenv-default devenv-dotnet devenv-python devenv-frontend devenv-full; do
   assert "Makefile target: $t" "grep -q '^$t:' Makefile"
 done
+
+banner "8. SHELL.NIX & DEVENV ENTRY POINTS"
+
+assert "shell.nix has profile arg" \
+  "grep -q 'profile\s*?' shell.nix"
+assert "devenv.nix imports all profiles" \
+  "grep -q './profiles/dotnet.nix' devenv.nix"
+assert "devenv-dotnet.nix exists + imports dotnet" \
+  "grep -q './profiles/dotnet.nix' devenv-dotnet.nix"
+assert "devenv-python.nix exists + imports python" \
+  "grep -q './profiles/python.nix' devenv-python.nix"
+assert "devenv-frontend.nix exists + imports frontend" \
+  "grep -q './profiles/frontend.nix' devenv-frontend.nix"
 
 echo ""
 echo "${BLUE}${BOLD}═══ RESULTS ═══${NC}"

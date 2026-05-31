@@ -9,20 +9,32 @@
 
 ## Quickstart
 
+This project supports **three entry points** — pick whichever fits your setup:
+
+### Option A: nix develop (flakes, recommended)
+
 ```bash
-# 1. Install Nix (one-time, any Linux distro)
-sh <(curl -L https://nixos.org/nix/install)
-
-# 2. Enable flakes
-mkdir -p ~/.config/nix
-echo 'extra-experimental-features = nix-command flakes' >> ~/.config/nix/nix.conf
-
-# 3. Enter a profile
 cd devenv
-make shell-dotnet       # .NET SDK + Aspire
-make shell-python       # Python + PyTorch + FastAPI
-make shell-frontend     # Node.js + Vue + Angular
-make shell-full         # everything combined
+make shell-dotnet       # nix develop .#dotnet
+make shell-python       # nix develop .#python
+make shell-frontend     # nix develop .#frontend
+```
+
+### Option B: nix-shell (classic, no flakes)
+
+```bash
+cd devenv
+make nix-shell-dotnet   # nix-shell --argstr profile dotnet
+make nix-shell-python   # nix-shell --argstr profile python
+```
+
+### Option C: devenv.sh
+
+```bash
+cd devenv
+make devenv-dotnet      # devenv shell --config devenv-dotnet.nix
+make devenv-python      # devenv shell --config devenv-python.nix
+devenv shell            # devenv.nix = full profile
 ```
 
 ---
@@ -62,46 +74,34 @@ devenv/
 ### Import chain
 
 ```
-flake.nix
-  ├─ profiles/core.nix          ← no imports (root)
-  ├─ profiles/dotnet.nix        ← imports ./core.nix
-  ├─ profiles/python.nix        ← imports ./core.nix
-  └─ profiles/frontend.nix      ← imports ./core.nix
+flake.nix  ─────────  5 devShells via pkgs.mkShell
+shell.nix  ─────────  1 derivation via --argstr profile
+devenv.nix ─────────  devenv.sh module (full profile)
+devenv-*.nix ───────  devenv.sh modules (per-profile)
+
+profiles/
+  ├─ core.nix          ← no imports (root)
+  ├─ dotnet.nix        ← imports ./core.nix
+  ├─ python.nix        ← imports ./core.nix
+  └─ frontend.nix      ← imports ./core.nix
 ```
-
----
-
-## Verification
-
-```bash
-make verify                    # 49 assertions (syntax, structure, import chains)
-make integration-test          # builds all shells in nixos/nix container (~3 min)
-```
-
-**Last integration test results (in nixos/nix container, 220s):**
-
-| Profile | Tools verified |
-|---------|---------------|
-| core | git, curl, make, podman, docker, gh, glab, editorconfig-checker, jq, yq, pre-commit |
-| dotnet | dotnet SDK (latest stable), dotnet --list-sdks |
-| python | python3, uv, ruff |
-| frontend | node (LTS), pnpm |
-| **Total** | **19/19 PASS** |
 
 ---
 
 ## Makefile Targets
 
-| Target | Action |
-|--------|--------|
-| `make verify` | Run 49-assertion suite locally |
-| `make integration-test` | Build all shells in container, confirm tools work |
-| `make shell-default` | Enter core shell |
-| `make shell-dotnet` | Enter .NET shell |
-| `make shell-python` | Enter Python shell |
-| `make shell-frontend` | Enter frontend shell |
-| `make shell-full` | Enter combined shell |
-| `make clean` | Remove nix artifacts |
+| Target | Entry point | Action |
+|--------|------------|--------|
+| `make verify` | — | 53+ assertion suite |
+| `make integration-test` | — | Build all shells in container |
+| `make shell-dotnet` | nix develop | .NET shell (flakes) |
+| `make shell-python` | nix develop | Python shell (flakes) |
+| `make shell-frontend` | nix develop | Node shell (flakes) |
+| `make nix-shell-dotnet` | nix-shell | .NET shell (classic) |
+| `make nix-shell-python` | nix-shell | Python shell (classic) |
+| `make devenv-dotnet` | devenv.sh | .NET shell (devenv) |
+| `make devenv-python` | devenv.sh | Python shell (devenv) |
+| `make clean` | — | Remove nix artifacts |
 
 ---
 

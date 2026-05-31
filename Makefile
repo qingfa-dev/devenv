@@ -1,23 +1,30 @@
 # Makefile — devenv operations
-# Context: Single entry point for verify, integration-test, shell-*, and clean.
-# Usage: make verify | make integration-test | make shell-dotnet | make clean
+# Context: Three entry points: nix develop (flakes), nix-shell (classic), devenv.sh.
+# Usage: make <target>
 
-.PHONY: verify integration-test clean shell-default shell-dotnet shell-python shell-frontend shell-full
+.PHONY: verify integration-test clean
+
+# Shell targets — each available in all three entry points
+.PHONY: shell-default shell-dotnet shell-python shell-frontend shell-full
+.PHONY: nix-shell-default nix-shell-dotnet nix-shell-python nix-shell-frontend nix-shell-full
+.PHONY: devenv-default devenv-dotnet devenv-python devenv-frontend devenv-full
 
 export NIX_CONFIG := extra-experimental-features = nix-command flakes
 
-# Verify: Run 49+ assertion suite on host (syntax, structure, import chains)
+# ── Verify ───────────────────────────────────────────────────
+# Context: 49+ assertion suite — syntax, structure, imports, file checks.
 verify:
 	@bash verify.sh
 
-# Integration-Test: Build all shells in nixos/nix container and confirm every tool works
+# ── Integration Test ─────────────────────────────────────────
+# Context: Builds every shell in nixos/nix container, confirms all tools work.
 integration-test:
 	@echo "Running full integration test in nixos/nix container..."
 	@echo "This downloads nixpkgs (~1.5 GB) on first run and takes ~3 min."
 	@podman run --rm -v "$$PWD":/workspace:rw -w /workspace \
 		nixos/nix:latest bash /workspace/integration-test.sh
 
-# Shell-<profile>: Enter a nix develop shell for the given profile
+# ── nix develop (flakes) ────────────────────────────────────
 shell-default:
 	@nix develop .#default
 
@@ -33,7 +40,39 @@ shell-frontend:
 shell-full:
 	@nix develop .#full
 
-# Clean: Remove nix build artifacts
+# ── nix-shell (classic, no flakes needed) ────────────────────
+nix-shell-default:
+	@nix-shell --argstr profile default
+
+nix-shell-dotnet:
+	@nix-shell --argstr profile dotnet
+
+nix-shell-python:
+	@nix-shell --argstr profile python
+
+nix-shell-frontend:
+	@nix-shell --argstr profile frontend
+
+nix-shell-full:
+	@nix-shell --argstr profile full
+
+# ── devenv.sh ────────────────────────────────────────────────
+devenv-default:
+	@devenv shell
+
+devenv-dotnet:
+	@devenv shell --config devenv-dotnet.nix
+
+devenv-python:
+	@devenv shell --config devenv-python.nix
+
+devenv-frontend:
+	@devenv shell --config devenv-frontend.nix
+
+devenv-full:
+	@devenv shell --config devenv.nix
+
+# ── Clean ────────────────────────────────────────────────────
 clean:
 	rm -f flake.lock
 	rm -rf .devenv .direnv
