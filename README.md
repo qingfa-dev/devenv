@@ -9,32 +9,20 @@
 
 ## Quickstart
 
-This project supports **three entry points** — pick whichever fits your setup:
-
-### Option A: nix develop (flakes, recommended)
-
 ```bash
+# 1. Install Nix (one-time, any Linux distro)
+sh <(curl -L https://nixos.org/nix/install)
+
+# 2. Enable flakes
+mkdir -p ~/.config/nix
+echo 'extra-experimental-features = nix-command flakes' >> ~/.config/nix/nix.conf
+
+# 3. Enter a profile
 cd devenv
-make shell-dotnet       # nix develop .#dotnet
-make shell-python       # nix develop .#python
-make shell-frontend     # nix develop .#frontend
-```
-
-### Option B: nix-shell (classic, no flakes)
-
-```bash
-cd devenv
-make nix-shell-dotnet   # nix-shell --argstr profile dotnet
-make nix-shell-python   # nix-shell --argstr profile python
-```
-
-### Option C: devenv.sh
-
-```bash
-cd devenv
-make devenv-dotnet      # devenv shell --config devenv-dotnet.nix
-make devenv-python      # devenv shell --config devenv-python.nix
-devenv shell            # devenv.nix = full profile
+make shell-dotnet       # .NET SDK + Aspire
+make shell-python       # Python + uv + ruff
+make shell-frontend     # Node.js + pnpm
+make shell-full         # everything combined
 ```
 
 ---
@@ -75,9 +63,6 @@ devenv/
 
 ```
 flake.nix  ─────────  5 devShells via pkgs.mkShell
-shell.nix  ─────────  1 derivation via --argstr profile
-devenv.nix ─────────  devenv.sh module (full profile)
-devenv-*.nix ───────  devenv.sh modules (per-profile)
 
 profiles/
   ├─ core.nix          ← no imports (root)
@@ -90,18 +75,15 @@ profiles/
 
 ## Makefile Targets
 
-| Target | Entry point | Action |
-|--------|------------|--------|
-| `make verify` | — | 53+ assertion suite |
-| `make integration-test` | — | Build all shells in container |
-| `make shell-dotnet` | nix develop | .NET shell (flakes) |
-| `make shell-python` | nix develop | Python shell (flakes) |
-| `make shell-frontend` | nix develop | Node shell (flakes) |
-| `make nix-shell-dotnet` | nix-shell | .NET shell (classic) |
-| `make nix-shell-python` | nix-shell | Python shell (classic) |
-| `make devenv-dotnet` | devenv.sh | .NET shell (devenv) |
-| `make devenv-python` | devenv.sh | Python shell (devenv) |
-| `make clean` | — | Remove nix artifacts |
+| Target | Action |
+|--------|--------|
+| `make verify` | 47-assertion suite |
+| `make integration-test` | Build all shells in container |
+| `make shell-dotnet` | .NET shell |
+| `make shell-python` | Python shell |
+| `make shell-frontend` | Node shell |
+| `make shell-full` | Combined shell |
+| `make clean` | Remove nix artifacts |
 
 ---
 

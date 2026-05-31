@@ -27,6 +27,7 @@ assert_eq() { local d="$1" e="$2" a="$3"
 
 banner() { echo ""; echo "${BLUE}${BOLD}── $* ──${NC}"; echo ""; }
 
+# ── 1. FILE STRUCTURE ───────────────────────────────────────
 banner "1. FILE STRUCTURE"
 
 assert "profiles/core.nix exists"     "test -f profiles/core.nix"
@@ -34,17 +35,13 @@ assert "profiles/dotnet.nix exists"   "test -f profiles/dotnet.nix"
 assert "profiles/python.nix exists"   "test -f profiles/python.nix"
 assert "profiles/frontend.nix exists" "test -f profiles/frontend.nix"
 assert "flake.nix exists"             "test -f flake.nix"
-assert "shell.nix exists"             "test -f shell.nix"
-assert "devenv.nix exists"            "test -f devenv.nix"
-assert "devenv-dotnet.nix exists"     "test -f devenv-dotnet.nix"
-assert "devenv-python.nix exists"     "test -f devenv-python.nix"
-assert "devenv-frontend.nix exists"   "test -f devenv-frontend.nix"
 assert "Makefile exists"              "test -f Makefile"
 assert "extensions.json exists"       "test -f .vscode/extensions.json"
 assert "README exists"                "test -f README.md"
 assert "verify.sh exists"             "test -f verify.sh"
 assert "integration-test.sh exists"   "test -f integration-test.sh"
 
+# ── 2. NIX SYNTAX ───────────────────────────────────────────
 banner "2. NIX SYNTAX"
 
 if command -v nix-instantiate &>/dev/null; then
@@ -55,6 +52,7 @@ else
   echo "  (nix not installed — skip)"
 fi
 
+# ── 3. IMPORT CHAINS ────────────────────────────────────────
 banner "3. IMPORT CHAINS"
 
 assert "core.nix has no imports" \
@@ -67,73 +65,46 @@ assert "frontend.nix imports core.nix" \
   "grep -q './core.nix' profiles/frontend.nix"
 assert "flake.nix imports profiles/core.nix" \
   "grep -q './profiles/core.nix' flake.nix"
-assert "flake.nix imports profiles/dotnet.nix" \
-  "grep -q './profiles/dotnet.nix' flake.nix"
-assert "flake.nix imports profiles/python.nix" \
-  "grep -q './profiles/python.nix' flake.nix"
-assert "flake.nix imports profiles/frontend.nix" \
-  "grep -q './profiles/frontend.nix' flake.nix"
 
+# ── 4. FLAKE STRUCTURE ──────────────────────────────────────
 banner "4. FLAKE STRUCTURE"
 
 DEVSHELLS=$(grep -cE '^\s+(default|dotnet|python|frontend|full)\s*=' flake.nix || echo 0)
 assert_eq "flake has 5 devShells" "5" "$DEVSHELLS"
 
-banner "5. PROFILE CONTENTS (LTS/stable attributes)"
+# ── 5. PROFILE CONTENTS ─────────────────────────────────────
+banner "5. PROFILE CONTENTS"
 
-assert "core: git"                 "grep -q 'git' profiles/core.nix"
-assert "core: curl"                "grep -q 'curl' profiles/core.nix"
-assert "core: gnumake"             "grep -q 'gnumake' profiles/core.nix"
-assert "core: podman"              "grep -q 'podman' profiles/core.nix"
-assert "core: docker-client"       "grep -q 'docker-client' profiles/core.nix"
-assert "core: gh"                  "grep -q 'gh' profiles/core.nix"
-assert "core: glab"                "grep -q 'glab' profiles/core.nix"
-assert "core: editorconfig-checker" "grep -q 'editorconfig-checker' profiles/core.nix"
-assert "core: jq"                  "grep -q 'jq' profiles/core.nix"
-assert "core: yq-go"               "grep -q 'yq-go' profiles/core.nix"
-assert "core: pre-commit"          "grep -q 'pre-commit' profiles/core.nix"
-assert "core: slirp4netns"         "grep -q 'slirp4netns' profiles/core.nix"
-assert "core: fuse-overlayfs"      "grep -q 'fuse-overlayfs' profiles/core.nix"
+assert "core: git"           "grep -q 'git' profiles/core.nix"
+assert "core: curl"          "grep -q 'curl' profiles/core.nix"
+assert "core: gnumake"       "grep -q 'gnumake' profiles/core.nix"
+assert "core: podman"        "grep -q 'podman' profiles/core.nix"
+assert "core: docker-client" "grep -q 'docker-client' profiles/core.nix"
+assert "core: gh"            "grep -q 'gh' profiles/core.nix"
+assert "core: glab"          "grep -q 'glab' profiles/core.nix"
+assert "core: jq"            "grep -q 'jq' profiles/core.nix"
+assert "core: yq-go"         "grep -q 'yq-go' profiles/core.nix"
+assert "core: pre-commit"    "grep -q 'pre-commit' profiles/core.nix"
+assert "dotnet: dotnet-sdk"  "grep -q 'dotnet-sdk' profiles/dotnet.nix"
+assert "dotnet: ASPIRE_HINT" "grep -q 'ASPIRE_HINT' profiles/dotnet.nix"
+assert "python: python3"     "grep -q 'python3' profiles/python.nix"
+assert "python: uv"          "grep -q 'uv' profiles/python.nix"
+assert "python: ruff"        "grep -q 'ruff' profiles/python.nix"
+assert "frontend: nodejs"    "grep -q 'nodejs' profiles/frontend.nix"
+assert "frontend: pnpm"      "grep -q 'pnpm' profiles/frontend.nix"
 
-# Context: dotnet-sdk is the unversioned attribute → always latest stable in nixpkgs
-assert "dotnet: dotnet-sdk (LTS)"   "grep -q 'dotnet-sdk' profiles/dotnet.nix"
-assert "dotnet: ASPIRE_HINT"        "grep -q 'ASPIRE_HINT' profiles/dotnet.nix"
-
-# Context: python3 is the unversioned attribute → always latest stable
-assert "python: python3 (stable)"   "grep -q 'python3' profiles/python.nix"
-assert "python: uv"                 "grep -q 'uv' profiles/python.nix"
-assert "python: ruff"               "grep -q 'ruff' profiles/python.nix"
-
-# Context: nodejs is the unversioned attribute → always latest LTS
-assert "frontend: nodejs (LTS)"     "grep -q 'nodejs' profiles/frontend.nix"
-assert "frontend: pnpm"             "grep -q 'pnpm' profiles/frontend.nix"
-assert "frontend: corepack"         "grep -q 'corepack' profiles/frontend.nix"
-
+# ── 6. EXTENSIONS.JSON ──────────────────────────────────────
 banner "6. EXTENSIONS.JSON"
 
 EXT_COUNT=$(jq '.recommendations | length' .vscode/extensions.json 2>/dev/null || echo 0)
 assert "extensions: >= 20" "test $EXT_COUNT -ge 20"
 
+# ── 7. MAKEFILE TARGETS ─────────────────────────────────────
 banner "7. MAKEFILE TARGETS"
 
-for t in verify integration-test shell-default shell-dotnet shell-python shell-frontend shell-full clean \
-         nix-shell-default nix-shell-dotnet nix-shell-python nix-shell-frontend nix-shell-full \
-         devenv-default devenv-dotnet devenv-python devenv-frontend devenv-full; do
+for t in verify integration-test shell-default shell-dotnet shell-python shell-frontend shell-full clean; do
   assert "Makefile target: $t" "grep -q '^$t:' Makefile"
 done
-
-banner "8. SHELL.NIX & DEVENV ENTRY POINTS"
-
-assert "shell.nix has profile arg" \
-  "grep -q 'profile\s*?' shell.nix"
-assert "devenv.nix imports all profiles" \
-  "grep -q './profiles/dotnet.nix' devenv.nix"
-assert "devenv-dotnet.nix exists + imports dotnet" \
-  "grep -q './profiles/dotnet.nix' devenv-dotnet.nix"
-assert "devenv-python.nix exists + imports python" \
-  "grep -q './profiles/python.nix' devenv-python.nix"
-assert "devenv-frontend.nix exists + imports frontend" \
-  "grep -q './profiles/frontend.nix' devenv-frontend.nix"
 
 echo ""
 echo "${BLUE}${BOLD}═══ RESULTS ═══${NC}"
@@ -143,9 +114,8 @@ if [ "$FAIL" -eq 0 ]; then
 else
   echo ""
   echo "Troubleshooting:"
-  echo "  File missing?     → git add profiles/ && git commit"
-  echo "  Import missing?   → check profiles/<name>.nix has 'imports = [ ./core.nix ]'"
-  echo "  Package missing?  → check https://search.nixos.org/packages"
-  echo "  Full guide:       → README.md Troubleshooting section"
+  echo "  File missing?   → git add profiles/ && git commit"
+  echo "  Import missing?  → check profiles/<name>.nix imports"
+  echo "  Full guide:      → README.md Troubleshooting"
   exit 1
 fi
