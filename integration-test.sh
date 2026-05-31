@@ -55,6 +55,34 @@ banner "5. FRONTEND — node + pnpm"
 wrap frontend node   node --version
 wrap frontend pnpm   pnpm --version
 
+# ── 6. DEEPER TOOL VERIFICATION ────────────────────────────
+banner "6. DEEPER TOOL VERIFICATION"
+
+wrap dotnet  "dotnet --list-sdks"           dotnet --list-sdks
+wrap dotnet  "dotnet workload list"         dotnet workload list
+wrap python  "uv pip list"                  uv pip list
+wrap full    "node -e console.log"          node -e "console.log('ok')"
+
+# ── 7. ENVIRONMENT & ISOLATION ──────────────────────────────
+banner "7. ENVIRONMENT & ISOLATION"
+
+ASPIRE_VAL=$(nix develop .#dotnet --command bash -c 'echo $ASPIRE_HINT' 2>/dev/null)
+printf "  %-30s " "dotnet: ASPIRE_HINT=$ASPIRE_VAL"
+if [ "$ASPIRE_VAL" = "podman" ]; then
+  echo "${GREEN}PASS${NC}"; PASS=$((PASS + 1))
+else
+  echo "${RED}FAIL${NC} (expected podman, got $ASPIRE_VAL)"; FAIL=$((FAIL + 1))
+fi
+
+# ── 8. STRUCTURAL BUILD ─────────────────────────────────────
+banner "8. STRUCTURAL BUILD"
+
+if nix flake check >/dev/null 2>&1; then
+  echo "  nix flake check ${GREEN}PASS${NC}"; PASS=$((PASS+1))
+else
+  echo "  nix flake check ${RED}FAIL${NC}"; FAIL=$((FAIL+1))
+fi
+
 echo ""
 echo "${BLUE}═══ RESULTS: ${GREEN}$PASS PASS${NC} ${RED}$FAIL FAIL${NC}  (${SECONDS}s) ═══${NC}"
 if [ "$FAIL" -eq 0 ]; then

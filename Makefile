@@ -31,6 +31,19 @@ shell-frontend:
 shell-full:
 	@nix develop .#full
 
+verify-in-container:
+	@echo "Running verify.sh inside nixos/nix container..."
+	@podman run --rm -v "$$PWD":/workspace:rw -w /workspace \
+		nixos/nix:latest bash verify.sh
+
+full-container-validate:
+	@echo "Running full validation inside nixos/nix container..."
+	@podman run --rm -v "$$PWD":/workspace:rw -w /workspace \
+		nixos/nix:latest bash -c '\
+		  echo "=== verify.sh ===" && bash verify.sh && \
+		  echo "" && \
+		  echo "=== integration-test.sh ===" && bash integration-test.sh'
+
 clean:
 	rm -f flake.lock
 	rm -rf .devenv .direnv

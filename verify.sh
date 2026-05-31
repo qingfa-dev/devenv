@@ -106,6 +106,55 @@ for t in verify integration-test shell-default shell-dotnet shell-python shell-f
   assert "Makefile target: $t" "grep -q '^$t:' Makefile"
 done
 
+# ── 8. FILE INTEGRITY ───────────────────────────────────────
+banner "8. FILE INTEGRITY"
+
+assert ".gitignore contains flake.lock"      "grep -q 'flake.lock' .gitignore"
+assert ".gitignore contains .direnv"         "grep -q '^\\.direnv' .gitignore"
+assert ".gitignore contains .devenv"         "grep -q '^\\.devenv' .gitignore"
+assert "verify.sh is executable"             "test -x verify.sh"
+assert "integration-test.sh is executable"   "test -x integration-test.sh"
+assert ".nix files have LF endings"          "! grep -rl 'CRLF' flake.nix profiles/*.nix 2>/dev/null"
+assert "No trailing whitespace in .nix"     "! grep -rl '[[:space:]]$' flake.nix profiles/*.nix 2>/dev/null"
+
+# ── 9. STRUCTURE HARDENING ──────────────────────────────────
+banner "9. STRUCTURE HARDENING"
+
+assert "Exactly 4 profile files"            "test \"\$(ls profiles/*.nix 2>/dev/null | wc -l)\" -eq 4"
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  assert "flake.nix is git-tracked"         "git ls-files --error-unmatch flake.nix >/dev/null 2>&1"
+  assert "profiles/*.nix are git-tracked"   "for f in profiles/*.nix; do git ls-files --error-unmatch \"\$f\" >/dev/null 2>&1 || exit 1; done"
+else
+  echo "  (no git repo — skip git tracking checks)"
+fi
+
+# ── 10. CONTENT DEEPENING ────────────────────────────────────
+banner "10. CONTENT DEEPENING"
+
+assert "core: includes fuse-overlayfs"      "grep -q 'fuse-overlayfs' profiles/core.nix"
+assert "core: includes slirp4netns"         "grep -q 'slirp4netns' profiles/core.nix"
+assert "core: no direct imports"            "! grep -q 'imports =' profiles/core.nix"
+assert "dotnet: shellHook defined"          "grep -q 'shellHook' profiles/dotnet.nix"
+assert "dotnet: DOTNET_CLI_TELEMETRY_OPTOUT" "grep -q 'DOTNET_CLI_TELEMETRY_OPTOUT' profiles/dotnet.nix"
+assert "python: shellHook defined"          "grep -q 'shellHook' profiles/python.nix"
+assert "python: UV_LINK_MODE set"           "grep -q 'UV_LINK_MODE' profiles/python.nix"
+assert "frontend: shellHook defined"        "grep -q 'shellHook' profiles/frontend.nix"
+assert "frontend: corepack included"        "grep -q 'corepack' profiles/frontend.nix"
+assert "extensions.json: valid JSON"         "jq empty .vscode/extensions.json 2>/dev/null"
+
+# ── 11. CROSS-REFERENCE ─────────────────────────────────────
+banner "11. CROSS-REFERENCE"
+
+assert "Makefile has shell-default target"  "grep -q '^shell-default:' Makefile"
+assert "Makefile has shell-dotnet target"   "grep -q '^shell-dotnet:' Makefile"
+assert "Makefile has shell-python target"   "grep -q '^shell-python:' Makefile"
+assert "Makefile has shell-frontend target" "grep -q '^shell-frontend:' Makefile"
+assert "Makefile has shell-full target"     "grep -q '^shell-full:' Makefile"
+assert "Makefile has clean target"          "grep -q '^clean:' Makefile"
+assert "README documents all 5 profiles"    "for p in core dotnet python frontend full; do grep -qi \"\$p\" README.md || exit 1; done"
+assert "README references nix develop"      "grep -q 'nix develop' README.md"
+assert "verify.sh checks all profile files"  "for f in core dotnet python frontend; do grep -q \"profiles/\$f.nix\" verify.sh || exit 1; done"
+
 echo ""
 echo "${BLUE}${BOLD}═══ RESULTS ═══${NC}"
 echo "  ${GREEN}PASS: $PASS${NC}  ${RED}FAIL: $FAIL${NC}"
