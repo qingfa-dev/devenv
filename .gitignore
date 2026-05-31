@@ -1,0 +1,10 @@
+.devenv/
+.direnv/
+.venv/
+node_modules/
+__pycache__/
+flake.lock
+.result
+.System.Runtime.CompilerServices.Unsafe.dll
+.DS_Store
+*.log

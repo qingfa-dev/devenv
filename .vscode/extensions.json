@@ -1,0 +1,29 @@
+{
+  "recommendations": [
+    "vue.volar",
+    "misterj.vue-volar-extention-pack",
+    "vitest.explorer",
+    "sdras.vue-vscode-snippets",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "aaron-bond.better-comments",
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+    "mk12.better-git-line-blame",
+    "donjayamanne.githistory",
+    "waderyan.gitblame",
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.csdevkit",
+    "ms-dotnettools.vscode-dotnet-runtime",
+    "microsoft-aspire.aspire-vscode",
+    "ms-azuretools.vscode-docker",
+    "ms-azuretools.vscode-containers",
+    "ms-vscode-remote.remote-containers",
+    "formulahendry.auto-close-tag",
+    "formulahendry.auto-rename-tag",
+    "syler.sass-indented",
+    "sibiraj-s.vscode-scss-formatter",
+    "christian-kohler.npm-intellisense",
+    "christian-kohler.path-intellisense"
+  ]
+}
