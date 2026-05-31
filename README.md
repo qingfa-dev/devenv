@@ -128,25 +128,145 @@ Search available nixpkgs: https://search.nixos.org/packages
 
 ---
 
-## FAQ
+## Troubleshooting & FAQ
 
-**Q: Does this create a container?**
+### Error: `nix: command not found`
+
+Nix is not installed. Install it:
+
+```bash
+sh <(curl -L https://nixos.org/nix/install)
+# restart your shell, then:
+nix --version
+```
+
+Docs: https://nixos.org/download.html
+
+### Error: `error: experimental Nix feature 'nix-command' is disabled`
+
+Flakes not enabled. Add to config:
+
+```bash
+mkdir -p ~/.config/nix
+echo 'extra-experimental-features = nix-command flakes' >> ~/.config/nix/nix.conf
+# restart shell
+```
+
+Docs: https://nixos.wiki/wiki/Flakes
+
+### Error: `error: file 'profiles/core.nix' is not tracked by Git`
+
+Nix flakes require all referenced files to be git-tracked. Run:
+
+```bash
+git add profiles/ flake.nix
+git commit -m "track profile files"
+```
+
+Every new `.nix` file must be committed before `nix develop` can use it.
+
+Docs: `nix flake --help` or https://nixos.wiki/wiki/Flakes#Git_requirements
+
+### Error: `error: undefined variable 'make'` or similar
+
+Package name mismatch in nixpkgs. Run `make integration-test`
+to find exact errors. Common fixes:
+- `make` → `gnumake`
+- `yq` → `yq-go`
+- `aspire` — does **not** exist as a standalone nixpkgs package.
+  Aspire is consumed via NuGet (`.csproj` PackageReference), not a CLI.
+  The dotnet profile sets `ASPIRE_HINT=podman` for container orchestration.
+
+Search packages: https://search.nixos.org/packages
+
+### Error: `error: cannot open connection to podman socket`
+
+Podman daemon is not running. Start it:
+
+```bash
+podman system service --time=0 unix:///run/user/$(id -u)/podman/podman.sock &
+export DOCKER_HOST="unix:///run/user/$(id -u)/podman/podman.sock"
+```
+
+Verify: `podman ps` (should return empty table, not an error).
+
+Docs: https://docs.podman.io/en/latest/markdown/podman-system-service.1.html
+
+### Error: `make: *** No rule to make target 'shell-xxx'`
+
+You're not in the `devenv/` directory. Run from the devenv project root:
+
+```bash
+cd /path/to/devenv
+make shell-dotnet
+```
+
+### Error: `warning: Git tree is dirty`
+
+You have uncommitted changes. Nix flakes warn but still work.
+To silence: `git add -A && git commit -m "wip"`
+
+### Error: `error: flake 'git+file:///...' does not provide attribute 'devShells...'`
+
+The flake structure is broken. Run `make verify` to diagnose:
+
+```bash
+make verify          # checks syntax, imports, devShells count
+```
+
+### Error: `copying path from 'https://cache.nixos.org'... FAIL`
+
+Network issue or cache unreachable. Ensure internet access.
+Nix needs to download ~1.5 GB on first `nix develop`.
+
+### How do I know what version of a tool I'm getting?
+
+```bash
+nix develop .#dotnet --command dotnet --version
+nix develop .#python --command python --version
+nix develop .#frontend --command node --version
+```
+
+Or browse nixpkgs: https://search.nixos.org/packages
+
+### Does this create a container?
+
 No. Nix modifies only PATH. Exit the shell and everything is clean.
 
-**Q: Why not Docker devcontainers?**
+### Why not Docker devcontainers?
+
 A devcontainer image with .NET + Node + Python is 10-15 GB, consuming 3-4 GB RAM idle. Nix shells use 0 extra RAM.
 
-**Q: Can I use Docker CLI instead of Podman?**
-Yes. Edit `profiles/core.nix` — change `export DOCKER_HOST` in the shellHook of each profile to point to `docker.sock`.
+### Can I use Docker CLI instead of Podman?
 
-**Q: How do I pin a specific .NET/Node/Python version?**
+Yes. Edit each profile's `shellHook` in `profiles/` to point DOCKER_HOST at `docker.sock`:
+
+```bash
+export DOCKER_HOST="unix:///var/run/docker.sock"
+```
+
+### How do I pin a specific .NET/Node/Python version?
+
 Replace the unversioned attribute with a specific one:
 - `dotnet-sdk` → `dotnet-sdk_10` (pin .NET 10)
 - `nodejs` → `nodejs_22` (pin Node 22 LTS)
 - `python3` → `python312` (pin Python 3.12)
 
-**Q: What if nixpkgs doesn't have a package I need?**
+### What if nixpkgs doesn't have a package I need?
+
 Install it via the tool's native package manager inside the shell:
-- `.NET`: `dotnet tool install`
+- .NET: `dotnet tool install`
 - Python: `uv pip install`
 - Node: `pnpm add -g`
+
+### How do I find more docs?
+
+| Topic | URL |
+|-------|-----|
+| Nix install | https://nixos.org/download.html |
+| Nix Flakes | https://nixos.wiki/wiki/Flakes |
+| nixpkgs search | https://search.nixos.org/packages |
+| nix develop manual | https://nix.dev/manual/nix/2.24/command-ref/new-cli/nix3-develop |
+| Podman rootless | https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md |
+| .NET Aspire | https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview |
+| devenv.sh (alternative) | https://devenv.sh |

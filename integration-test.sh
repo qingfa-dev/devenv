@@ -16,6 +16,13 @@ wrap() { local shell="$1" label="$2"; shift 2
     echo "${GREEN}PASS${NC} ($(echo "$out" | head -c 80))"; PASS=$((PASS + 1))
   else
     echo "${RED}FAIL${NC}"; echo "    $(echo "$out" | tail -3)"; FAIL=$((FAIL + 1))
+    # Guide: point to README troubleshooting section for common fixes
+    case "$out" in
+      *"not tracked by Git"*) echo "    ── Fix: git add profiles/ && git commit" ;;
+      *"undefined variable"*) echo "    ── Fix: check package name at https://search.nixos.org/packages" ;;
+      *"experimental Nix feature"*) echo "    ── Fix: enable flakes — see README Troubleshooting" ;;
+      *"command not found"*) echo "    ── Fix: tool missing from profile — add to profiles/core.nix" ;;
+    esac
   fi
 }
 
@@ -50,4 +57,13 @@ wrap frontend pnpm   pnpm --version
 
 echo ""
 echo "${BLUE}═══ RESULTS: ${GREEN}$PASS PASS${NC} ${RED}$FAIL FAIL${NC}  (${SECONDS}s) ═══${NC}"
-[ "$FAIL" -eq 0 ] && echo "All profiles verified." && exit 0 || exit 1
+if [ "$FAIL" -eq 0 ]; then
+  echo "All profiles verified." && exit 0
+else
+  echo ""
+  echo "Troubleshooting:"
+  echo "  make verify           — check file structure and imports"
+  echo "  README.md             — full troubleshooting guide"
+  echo "  https://search.nixos.org/packages  — check package names"
+  exit 1
+fi

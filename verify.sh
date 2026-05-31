@@ -118,4 +118,14 @@ done
 echo ""
 echo "${BLUE}${BOLD}═══ RESULTS ═══${NC}"
 echo "  ${GREEN}PASS: $PASS${NC}  ${RED}FAIL: $FAIL${NC}"
-[ "$FAIL" -eq 0 ] && echo "  All assertions passed." && exit 0 || exit 1
+if [ "$FAIL" -eq 0 ]; then
+  echo "  All assertions passed." && exit 0
+else
+  echo ""
+  echo "Troubleshooting:"
+  echo "  File missing?     → git add profiles/ && git commit"
+  echo "  Import missing?   → check profiles/<name>.nix has 'imports = [ ./core.nix ]'"
+  echo "  Package missing?  → check https://search.nixos.org/packages"
+  echo "  Full guide:       → README.md Troubleshooting section"
+  exit 1
+fi
