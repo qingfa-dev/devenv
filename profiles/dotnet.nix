@@ -1,12 +1,13 @@
-# Boundary: .NET profile — builds on core + latest stable dotnet-sdk from nixpkgs.
-# Context: The .NET SDK includes C#, F#, MSBuild, NuGet, and dotnet-format.
-#          Aspire is consumed via NuGet packages (Aspire.Hosting.*) at project build time.
-#          No separate Aspire CLI package exists in nixpkgs.
-# Contract: pre=dotnet-sdk in nixpkgs-unstable, post=dotnet CLI on PATH
+# Boundary: .NET profile — builds on core + dotnet-sdk_10.
+# Context: dotnet-sdk_10 = .NET 10.0.300 (latest, used by resys.fashion).
+#          dotnet-sdk   = .NET 8 (LTS) — use this for LTS projects.
+#          dotnet-sdk_9 = .NET 9 (STS) — use this for .NET 9 projects.
+#          Aspire is consumed via NuGet packages (Aspire.Hosting.*) at build time.
+# Contract: pre=dotnet-sdk_10 in nixpkgs-unstable, post=dotnet CLI on PATH
 { pkgs, ... }: {
   packages = with pkgs;
     (import ./core.nix { inherit pkgs; }).packages
-    ++ [ dotnet-sdk ];
+    ++ [ dotnet-sdk_10 ];
 
   shellHook = ''
     export ASPIRE_HINT="podman"

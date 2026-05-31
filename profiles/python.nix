@@ -1,7 +1,10 @@
-# Boundary: Python profile — builds on core + latest stable python3 + uv + ruff.
-# Context: uv replaces pip/venv/pipx with a single fast toolchain.
+# Boundary: Python profile — builds on core + python3 (latest stable) + uv + ruff.
+# Context: python3    = Python 3.13 (latest stable — follows nixpkgs-unstable).
+#          python312  = Python 3.12 (previous stable) — uncomment to pin.
+#          python313  = Python 3.13 (explicit) — same as python3 currently.
+#          uv replaces pip/venv/pipx with a single fast toolchain.
 #          ruff replaces flake8 + isort + black in one binary.
-# Contract: pre=python3, uv, ruff in nixpkgs, post=all three on PATH
+# Contract: post=python + uv + ruff on PATH
 { pkgs, ... }: {
   packages = with pkgs;
     (import ./core.nix { inherit pkgs; }).packages
