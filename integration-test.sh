@@ -4,7 +4,7 @@
 # Usage: make integration-test  or  podman run ... bash integration-test.sh
 set -euo pipefail
 RED='\033[0;31m'; GREEN='\033[0;32m'; BLUE='\033[0;34m'; NC='\033[0m'
-PASS=0; FAIL=0; START=$(date +%s); cd /workspace
+PASS=0; FAIL=0; START=$(date +%s); cd "$(dirname "$0")"
 
 banner() { echo ""; echo "${BLUE}── $* ──${NC}"; }
 export NIX_CONFIG="extra-experimental-features = nix-command flakes"

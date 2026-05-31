@@ -12,7 +12,7 @@ assert() { local d="$1" c="$2"
   if eval "$c" >/dev/null 2>&1; then
     echo "${GREEN}PASS${NC}"; PASS=$((PASS + 1))
   else
-    echo "${RED}FAIL${NC}"; FAIL=$((FAIL + 1)); eval "$c" 2>&1 | sed 's/^/    /'
+    echo "${RED}FAIL${NC}"; FAIL=$((FAIL + 1)); eval "$c" 2>&1 | while IFS= read -r line; do printf "    %s\n" "$line"; done
   fi
 }
 
@@ -96,8 +96,12 @@ assert "frontend: pnpm"      "grep -q 'pnpm' profiles/frontend.nix"
 # ── 6. EXTENSIONS.JSON ──────────────────────────────────────
 banner "6. EXTENSIONS.JSON"
 
-EXT_COUNT=$(jq '.recommendations | length' .vscode/extensions.json 2>/dev/null || echo 0)
-assert "extensions: >= 20" "test $EXT_COUNT -ge 20"
+if command -v jq &>/dev/null; then
+  EXT_COUNT=$(jq '.recommendations | length' .vscode/extensions.json)
+elif command -v python3 &>/dev/null; then
+  EXT_COUNT=$(python3 -c "import json; print(len(json.load(open('.vscode/extensions.json'))['recommendations']))")
+fi
+assert "extensions: >= 20" "test ${EXT_COUNT:-0} -ge 20"
 
 # ── 7. MAKEFILE TARGETS ─────────────────────────────────────
 banner "7. MAKEFILE TARGETS"
@@ -140,7 +144,11 @@ assert "python: shellHook defined"          "grep -q 'shellHook' profiles/python
 assert "python: UV_LINK_MODE set"           "grep -q 'UV_LINK_MODE' profiles/python.nix"
 assert "frontend: shellHook defined"        "grep -q 'shellHook' profiles/frontend.nix"
 assert "frontend: corepack included"        "grep -q 'corepack' profiles/frontend.nix"
-assert "extensions.json: valid JSON"         "jq empty .vscode/extensions.json 2>/dev/null"
+if command -v jq &>/dev/null; then
+  assert "extensions.json: valid JSON"       "jq empty .vscode/extensions.json"
+elif command -v python3 &>/dev/null; then
+  assert "extensions.json: valid JSON"       "python3 -c 'import json; json.load(open(\".vscode/extensions.json\"))'"
+fi
 
 # ── 11. CROSS-REFERENCE ─────────────────────────────────────
 banner "11. CROSS-REFERENCE"
