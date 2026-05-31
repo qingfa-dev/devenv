@@ -61,7 +61,7 @@ banner "6. DEEPER TOOL VERIFICATION"
 wrap dotnet  "dotnet --list-sdks"           dotnet --list-sdks
 wrap dotnet  "dotnet workload list"         dotnet workload list
 wrap python  "uv pip list"                  uv pip list
-wrap full    "node -e console.log"          node -e "console.log('ok')"
+wrap full    "node eval"                    node -e process.version
 
 # ── 7. ENVIRONMENT & ISOLATION ──────────────────────────────
 banner "7. ENVIRONMENT & ISOLATION"

@@ -98,10 +98,11 @@ banner "6. EXTENSIONS.JSON"
 
 if command -v jq &>/dev/null; then
   EXT_COUNT=$(jq '.recommendations | length' .vscode/extensions.json)
+  assert "extensions: >= 20" "test $EXT_COUNT -ge 20"
 elif command -v python3 &>/dev/null; then
   EXT_COUNT=$(python3 -c "import json; print(len(json.load(open('.vscode/extensions.json'))['recommendations']))")
+  assert "extensions: >= 20" "test $EXT_COUNT -ge 20"
 fi
-assert "extensions: >= 20" "test ${EXT_COUNT:-0} -ge 20"
 
 # ── 7. MAKEFILE TARGETS ─────────────────────────────────────
 banner "7. MAKEFILE TARGETS"
